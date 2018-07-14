@@ -1,193 +1,118 @@
 <!DOCTYPE>
+
 <html>
 <head>
-	<title>puzzle</title>
-
-	<style type="text/css">
-		body {
-		       margin: 0px;
-		       padding: 0px;
-		}
-		.imgCenter {
-			width: 310px;
-			height: 310px;
-			background-image: url("assets/images/Pembroke-Welsh-Corgi-MP.jpg");
-			background-repeat: no-repeat;
-   			background-position: center; 
-    		position: absolute;
-    		display: none;
-    		z-index: 2;
-		}
-		#container {
-			width: 310px;
-			height: 310px;
-			border: 2px solid black;
-			margin: auto;
-			margin-top: 20px;
-		}
-		.easy {
-			float: left;
-			position: relative;
-			width: 100px;
-			height: 100px;
-			background-color: gray;
-			border: 1px solid black;
-			font-size: 24px;
-			text-align: center;
-			color: white;
-		}
-		.medium {
-			float: left;
-			position: relative;
-			width: 75px;
-			height: 75px;
-			background-color: gray;
-			border: 1px solid black;
-			font-size: 24px;
-			text-align: center;
-			color: white;
-		}
-		.hard {
-			float: left;
-			position: relative;
-			width: 60px;
-			height: 60px;
-			background-color: gray;
-			border: 1px solid black;
-			font-size: 24px;
-			text-align: center;
-			color: white;
-		}
-		.shift:hover {
-			opacity: .7;
-			cursor: pointer;
-		}
-		#buttons {
-			text-align: center;
-			margin: auto;
-			margin-top: 20px;
-		}
-	</style>
+  <title>GIF Puzzle - jQuery Plugin</title>
+  <style type="text/css">
+      #start {
+            float: right;
+            margin: 20px;
+        }
+  </style>
 </head>
 <body>
+    <div id="target"></div>
 
-<!-- <div><img src="images/Pembroke-Welsh-Corgi-MP.jpg" alt="corgi"></div> -->
+    <button id="start">Start</button>
 
-<div id="container">
-	<div class="imgCenter"></div>
-	<div id="tiles">
-		
-	</div>
+    <script src="https://www.gstatic.com/firebasejs/4.12.0/firebase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        // This is where we initialize the game
+        $(document).ready(function(){
+            // Initialize the game and create the plugin
+            // When the squares swap places, the moving square must always appear on top
+            var zi = 1; 
+            var gameArray = [];
+            // We increment z-index each time a square is shifted
+            // The index of the empty square by default, the 16th square
+            var EmptySquare = 16;
+            // Now, this is where we create the plugin and call it fifteen.
+            $.fn.extend({ fifteen:function(square_size){
+                // Grab the id of the HTML element into which we are placing the game,
+                // it is the selector - "#target" from  $("#target").fifteen(150);
+                var targetElement = "#" + $(this).attr("id");
+                var sqSize = square_size + 'px';
+                var boardSize = (square_size * 4) + 'px';// Inject DIV into target, this is our game board
+                $(targetElement).html("<div id = 'board'></div>");
+                $("#board").css({ position:'absolute', width: boardSize, height: boardSize, border: '1px solid gray' });
+                    // Populate the game board's HTML container with 15 squares
+                    for (var i = 0; i < 16; i++){
+                    // A dirty way to create an arbitrary DIV and
+                    // append it into HTML dynamically
+                    // Notice each square uses the same image earth_img_600x600.jpg
+                    // It just uses a different x/y offset for each square
+                    $("#board").append(
+                        "<div style = 'position: absolute; left: " + ((i % 4) * square_size) + 
+                        "px; top: " + Math.floor(i / 4) * square_size + 
+                        "px; width: " + square_size + 
+                        "px; height: " + square_size + 
+                        "px; text-align: center; line-height: " + square_size + "px; -moz-box-shadow: inset 0 0 20px #555555; -webkit-box-shadow: inset 0 0 20px #555555; box-shadow: inset 0 0 20px #555555; background: #ffffff url(Pembroke-Welsh-Corgi-MP.jpg) " + (-(i % 4) * square_size) + 
+                        "px " + -Math.floor(i / 4) * square_size + 
+                        "px no-repeat !important'>" + 
+                        "data-value: " + i + "</div>");
+                    gameArray.push(i);
+                }
+                $('#start').on('click', function(){
 
-</div>
+                });
 
-<div id="buttons">
-	<button id="easy" data-value="3">Easy</button>
-	<button id="medium" data-value="4">Medium</button>
-	<button id="hard" data-value="5">Hard</button>
+                // Empty up the 16th square, as the starting point
+                // EmptySquare = 16
+                    $("#board").children("div:nth-child(" + EmptySquare + ")").css({backgroundImage: "", background: "#ffffff"});
+                // Attach click event to each square
+                    $("#board").children("div").click(function()
+                {
+                Move(this, square_size);
+                });
+                }
+            });
 
-	<button id="start">Start</button>
-	<button id="hint">Hint</button>
-</div>
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script type="text/javascript">
-
-//puzzle piece number
-	var puzzleNum3 = [1, 2, 3, 4, 5, 6, 7, 8];
-	var puzzleNum4 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-	var puzzleNum5 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
-	var puzzleNum;
-	var blocks;
-
-
-// 3x3 layout
-	$(document).on('click', '#easy', function(){
-		if ($('#tiles').text("") !== "") {
-			
-			puzzleNum = puzzleNum3;
-			for (var i = 0; i < puzzleNum.length; i++) {
-				blocks = $('<div>').attr('class', 'easy shift');
-				blocks.text(puzzleNum[i]);
-				$('#tiles').append(blocks);
-			}
-		}
-	});	
-
-// 4x4 layout
-	$(document).on('click', '#medium', function(){
-		if ($('#tiles').text("") !== "") {
-			
-			puzzleNum = puzzleNum4;
-			for (var i = 0; i < puzzleNum.length; i++) {
-				blocks = $('<div>').attr('class', 'medium shift');
-				blocks.text(puzzleNum[i]);
-				$('#tiles').append(blocks);
-			}
-		}
-	});	
-
-// 5x5 layout
-	$(document).on('click', '#hard', function(){
-		if ($('#tiles').text("") !== "") {
-
-			puzzleNum = puzzleNum5;
-			for (var i = 0; i < puzzleNum.length; i++) {
-				blocks = $('<div>').attr('class', 'hard shift');
-				blocks.text(puzzleNum[i]);
-				$('#tiles').append(blocks);
-			}
-		}
-	});	
-
-// start-randomize the tiles
-	$(document).on('click', '#start', function(){
-		if ($('#tiles').children().length == 8) {
-			$('#tiles').text("");
-			puzzleNum = puzzleNum.sort(function(a, b){return 0.5 - Math.random()});
-			for (var i = 0; i < puzzleNum.length; i++) {
-				blocks = $('<div>').attr('class', 'easy shift');
-				blocks.text(puzzleNum[i]);
-				$('#tiles').append(blocks);
-			}
-		}else if ($('#tiles').children().length == 15) {
-			$('#tiles').text("");
-			puzzleNum = puzzleNum.sort(function(a, b){return 0.5 - Math.random()});
-			for (var i = 0; i < puzzleNum.length; i++) {
-				blocks = $('<div>').attr('class', 'medium shift');
-				blocks.text(puzzleNum[i]);
-				$('#tiles').append(blocks);
-			}
-		}else if ($('#tiles').children().length == 24) {
-			$('#tiles').text("");
-			puzzleNum = puzzleNum.sort(function(a, b){return 0.5 - Math.random()});
-			for (var i = 0; i < puzzleNum.length; i++) {
-				blocks = $('<div>').attr('class', 'hard shift');
-				blocks.text(puzzleNum[i]);
-				$('#tiles').append(blocks);
-			}
-		}
-	});	
-
-// hint 
-	$(document).on('click', '#hint', function(){
-		$('.imgCenter').fadeIn(2000);
-		$('.imgCenter').fadeOut(2000);
-	});	
-
-// moving blocks
-// need to figure out a way to know which way to move/ is allowed
-
-	$(document).on('click', '.shift', function(){
-		var widthSize = $(this).width() + "px";
-		console.log(widthSize);
-		// $(this).animate({"left": "+=100px"});
-		$(this).animate({"left": "+=" + widthSize});
-	});
-		
-</script>
-
+            // Move() is the function that is called when a square is clicked
+            // Note that it is independent of the plugin itself which is described above
+            // It takes two parameters,
+            //     1. object handle to the square that was clicked, and
+            //     2. the width of the square
+            function Move(clicked_square, square_size){
+            // We need to locate movable tiles based on where the empty spot is,
+            // We can only move the four surrounding squares
+                var movable = false;
+                // Swap x/y between the clicked square and the currently empty square
+                var oldx = $("#board").children("div:nth-child(" + EmptySquare + ")").css("left");
+                var oldy = $("#board").children("div:nth-child(" + EmptySquare + ")").css("top");
+                var newx = $(clicked_square).css("left");
+                var newy = $(clicked_square).css("top");
+                // The clicked square is north of the empty square
+                if (oldx == newx && newy == (parseInt(oldy) - square_size) + 'px'){
+                    movable = true;
+                };
+                // The clicked square is south of the empty square
+                if (oldx == newx && newy == (parseInt(oldy) + square_size) + 'px'){
+                    movable = true;
+                };
+                // The clicked square is west of the empty square
+                if ((parseInt(oldx) - square_size) + 'px' == newx && newy == oldy){
+                    movable = true;
+                };
+                // The clicked square is east of the empty square
+                if ((parseInt(oldx) + square_size) + 'px' == newx && newy == oldy){
+                    movable = true;
+                };
+                if (movable){
+                    // Increment zindex so the new tile is always on top of all others
+                    $(clicked_square).css("z-index", zi++);
+                    // Swap squares… Animate new square into old square position
+                    $(clicked_square).animate({ left: oldx, top: oldy }, 200, function(){
+                        //Move old square into new square position
+                        $("#board").children("div:nth-child(" + EmptySquare + ")").css("left", newx);
+                        $("#board").children("div:nth-child(" + EmptySquare + ")").css("top", newy);
+                    });
+                };
+            };
+        // Ok, we're ready to initialize the game, let's do it.
+        // Create a game with 150 by 150 squares inside "#target" div:
+            $("#target").fifteen(150);
+        });
+    </script>
 </body>
 </html>
