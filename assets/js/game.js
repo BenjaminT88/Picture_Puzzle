@@ -229,11 +229,18 @@ function completionChecker(){
 function addCompleteImg(){
     if ($('#hiddenImg').attr('src').indexOf('gif') != -1){
         displayCompImg = $("<img class='completed' alt='completed_images'>").attr('src', $('#hiddenImg').attr('data-animate'));
+        gifDataAnimate = $("#hiddenImg").attr("data-animate");
+        $("#hiddenImg").attr({
+            "data-status": "animate",
+            "src": gifDataAnimate
+        })
+        $("#hiddenImg").fadeIn(1000);
         if (localStorage.completedImgArr.indexOf($("#hiddenImg").attr("data-id")) == -1){
             completedImg.push($('#hiddenImg').attr('data-animate'));
         }
     }else {
         displayCompImg = $("<img class='completed' alt='completed_images'>").attr('src', $('#hiddenImg').attr('src'));
+        $("#hiddenImg").fadeIn(1000);
         if (localStorage.completedImgArr.indexOf($('#hiddenImg').attr('src')) == -1){
             completedImg.push($('#hiddenImg').attr('src'));
         }
@@ -244,13 +251,6 @@ function addCompleteImg(){
 
     $('#nav-completed-p').remove();
     $('#nav-completed').append(displayCompImg);
-    
-    gifDataAnimate = $("#hiddenImg").attr("data-animate");
-    $("#hiddenImg").attr({
-        "data-status": "animate",
-        "src": gifDataAnimate
-    })
-    $("#hiddenImg").fadeIn(1000);
 };
 
 function timerSecond(){
